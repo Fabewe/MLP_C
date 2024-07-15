@@ -1,46 +1,85 @@
 #include "mlp.h"
+#include "dataset.h"
+
+#define FULL_PROGRAM 1
+
+
+int main(int argc, char** argv){
+
+    FILE* fd1 = fopen("train_quake.dat","r");
+    dataset trainDataset;
+
+    parseDataset(fd1,&trainDataset);
+   
+    FILE* fd2 = fopen("test_quake.dat","r");
+    dataset testDataset;
+
+    parseDataset(fd2,&testDataset);
+
+    //normalizeDatasets(&trainDataset,&testDataset);
 
 
 
-void main(int argc, char** argv){
-
-    srand(time(NULL));
-
-    printf("\n\n");
-    int topology[4] = {2,4,4,5};
-    double input[2] = {1,2};
-
-    double output[4] = { 3, 2, 1,4};
-    // double * output;
-
-    // output = (double  *)malloc(sizeof(double) * 4);
-
-    // output[0] = 3;
-    // output[1] = 2;
-    // output[2] = 1;
-    // output[3] = 4;
-
-    mlp* aux;
-    aux = initMLP(topology,SIGMOID);
+    if(FULL_PROGRAM){
+        srand(time(NULL));
+        printf("\n\n");
+        int topology[4] = {trainDataset.xFeatures,2,trainDataset.yFeatures,2};
 
 
-    
-    for(int i = 0 ; i< 25 ; i++){
-        feedInput(input,aux);
-        forwardPropagation(aux);
-        obtainError(aux,output);
-        backpropagateError(aux,output);
-        accumulateChange(aux);
-        adjustWeights(aux);
-        printf("Iter  = %d || Error -> %f\n", i + 1,aux->header.currError);
+        mlp* aux;
+        aux = initMLP(topology,SIGMOID);
+
+        
+
+        
+        double minerror = 99999;
+        double errorTest = 0 ;
+
+        for (size_t x = 1; x <= 1000; x++)
+        {
+            for(int i = 0 ; i < trainDataset.size; i++){
+
+            resetWdelta(aux);
+            feedInput(trainDataset.xData[i],aux);
+            forwardPropagation(aux);
+            backpropagateError(aux,trainDataset.yData[i]);
+            accumulateChange(aux);
+            adjustWeights(aux);
+            obtainError(aux,trainDataset.yData[i]);
+
+            errorTest += aux->header.currError;
+
+            }
+            
+            printf("Iteraration %d -> Error : %lf\n",x,errorTest/trainDataset.size);
+            errorTest = 0;
+        }
+
+        
+
+        int numero = testDataset.size;
+
+        for(int i = 0 ; i < numero  ; i++){
+
+
+            feedInput(testDataset.xData[i],aux);
+            forwardPropagation(aux);
+            obtainError(aux,testDataset.yData[i]);
+
+            errorTest += aux->header.currError;
+
+        }
+        errorTest = errorTest / numero; 
+
+
+        
+
+        printNetwork(aux);
+
+        printf("Error Test -> %lf\n", errorTest);
     }
 
-    obtainError(aux,output);
-    //printNetwork(aux);
     
-    printf("Error = %f\n", aux->header.currError);
 
-    //printf("\nEn principio todo bien\n\n");
+    return 0;
 }
-
-

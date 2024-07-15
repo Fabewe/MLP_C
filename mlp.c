@@ -23,8 +23,11 @@ void layerInit(mlpLayer* layer , mlpHeader header){
                 layer->neurons[i].value = 0;
                 layer->neurons[i].delta = 0;
                 for(int j = 0 ; j < header.nInputs + 1 ; j++ ){
+
                     layer->neurons[i].wList[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
+                    layer->neurons[i].wDelta[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
                 }
+                
             }
 
         //OUTPUT LAYER
@@ -38,7 +41,7 @@ void layerInit(mlpLayer* layer , mlpHeader header){
 
                 layer->neurons[i].wList = (double * )malloc(sizeof(double) * header.nNeurons + 1);
                 layer->neurons[i].wDelta = (double * )malloc(sizeof(double) * header.nNeurons + 1);
-                layer->neurons[i].lastWdelta = (double * )calloc(sizeof(double) * header.nInputs + 1,sizeof( double ));
+                layer->neurons[i].lastWdelta = (double * )calloc(sizeof(double) * header.nNeurons + 1,sizeof( double ));
                 
 
                 //INITIALIZE ZERO (BORRAR)
@@ -46,6 +49,7 @@ void layerInit(mlpLayer* layer , mlpHeader header){
                 layer->neurons[i].delta = 0;
                 for(int j = 0 ; j < header.nNeurons + 1; j++ ){
                     layer->neurons[i].wList[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
+                    layer->neurons[i].wDelta[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
                 }
             }
 
@@ -58,7 +62,7 @@ void layerInit(mlpLayer* layer , mlpHeader header){
 
                 layer->neurons[i].wList = (double * )malloc(sizeof(double) * header.nNeurons + 1);
                 layer->neurons[i].wDelta = (double * )malloc(sizeof(double) * header.nNeurons + 1);
-                layer->neurons[i].lastWdelta = (double * )calloc(sizeof(double) * header.nInputs + 1, sizeof( double ));
+                layer->neurons[i].lastWdelta = (double * )calloc(sizeof(double) * header.nNeurons + 1, sizeof( double ));
                 
 
                 //INITIALIZE ZERO (BORRAR)
@@ -66,6 +70,7 @@ void layerInit(mlpLayer* layer , mlpHeader header){
                 layer->neurons[i].delta = 0;
                 for(int j = 0 ; j < header.nNeurons + 1; j++ ){
                     layer->neurons[i].wList[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
+                    layer->neurons[i].wDelta[j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0 ;
                 }
             }
         }        
@@ -84,25 +89,6 @@ void layerInit(mlpLayer* layer , mlpHeader header){
             }
     }
 
-
-    //DEBUG
-    /*
-      int maxNe = 0;
-      if(layer->type == IN){
-        maxNe =  header.nInputs;
-      }else if(layer->type == OUT){
-        maxNe = header.nOutputs;
-      }else{
-        maxNe = header.nNeurons;
-      }
-
-    printf("CAPA %d INICIALIZADA\n",layer->identifier);
-    printf("Valores : \n");
-    for(int i = 0 ; i < maxNe ; i++){
-        printf("%f ",layer->neurons[i].value);
-    }
-    printf("\n");
-    */
 }
 
 mlp* initMLP(int* top , activationF type){
@@ -158,27 +144,43 @@ void printNetwork(mlp* network){
 
     
     //Print mlp data
-
     printf("===========\nN Inputs: %u \nN Outputs: %u \nN Neurons: %u \nN Hidden Layers: %u \nActivation Function: %s \n===========\n\nLayers:\n",network->header.nInputs,network->header.nOutputs,network->header.nNeurons,network->header.nLayers,getActivationFunction(network->header.aFunction));
 
     //Print layers
     
     //PRINT INPUT LAYER
-    printf("CAPA %d ",network->layers[0].identifier);
+    printf("CAPA INPUT\n");
     printf("Valores : \n");
     for(int i = 0 ; i < network->header.nInputs ; i++){
-        printf("%f ",network->layers[0].neurons[i].value);
+        printf("%lf ",network->layers[0].neurons[i].value);
     }
     printf("\n");
 
 
+     printf("CAPA %d\n",1);
+    for(int j = 0 ; j < network->header.nNeurons ; j++){
+            printf(" %lf ->",network->layers[1].neurons[j].value);
+            for(int x = 0 ; x < network->header.nInputs ; x++){
+                printf(" %lf",network->layers[1].neurons[j].wList[x]);
+
+            }
+            printf("||");
+
+    }
+     printf("\n");
     //PRINT HIDDEN LAYERS
-    for(int i = 1 ; i < network->header.nLayers + 1 ; i++ ){
+    for(int i = 2 ; i <= network->header.nLayers  ; i++ ){
 
         printf("CAPA %d ",network->layers[i].identifier);
         printf("Valores : \n");
         for(int j = 0 ; j < network->header.nNeurons ; j++){
-            printf("%f ",network->layers[i].neurons[j].value);
+            printf("%lf ->",network->layers[i].neurons[j].value);
+            for(int x = 0 ; x < network->header.nNeurons +1; x++){
+                printf(" %lf",network->layers[i].neurons[j].wList[x]);
+
+            }
+            printf("||");
+
         }
         printf("\n");
     }
@@ -187,7 +189,7 @@ void printNetwork(mlp* network){
     printf("CAPA OUTPUT\n");
     printf("Valores : \n");
     for(int i = 0 ; i < network->header.nOutputs ; i++){
-        printf("%f ",network->layers[network->header.nLayers + 1].neurons[i].value);
+        printf("%lf ",network->layers[network->header.nLayers + 1].neurons[i].value);
     }
     printf("\n");
 }
@@ -203,78 +205,81 @@ void feedInput(double* inputs,mlp* network){
 
 void forwardPropagation(mlp* network){
 
-    double net;
+    double net = 0;
 
     //FIRST LAYER
     for(int i = 0 ; i < network->header.nNeurons; i++){
         net = 0;
-        for(int j = 1 ; j < network->header.nInputs +  1; j++){
+        for(int j = 0 ; j < network->header.nInputs; j++){
 
-            //printf(" %f --",network->layers[1].neurons[i].wList[j]);
-            net += network->layers[1].neurons[i].wList[j] * network->layers[0].neurons[j].value;
+            net += network->layers[1].neurons[i].wList[j+1] * network->layers[0].neurons[j].value;
 
         }
 
         //Add bias
         net += network->layers[1].neurons[i].wList[0];
 
-        ///Apply the activation (sigmoide) function
+        ///Apply the activation function
         network->layers[1].neurons[i].value = activateF(network->header,net);
+        network->layers[1].neurons[i].net = net;
+
     }
 
 
     //HIDDEN LAYERS
-    for(int  k = 2 ; k <  network->header.nLayers + 1 ; k++){
+    for(int  k = 2 ; k <=  network->header.nLayers  ; k++){
 
         for(int i = 0 ; i < network->header.nNeurons; i++){
 
             net = 0;
-            for(int j = 1 ; j < network->header.nNeurons + 1; j++){
-                //printf(" %f --",network->layers[k].neurons[i].wList[j]);
-                net += network->layers[k].neurons[i].wList[j] * network->layers[k-1].neurons[j].value;
+            for(int j = 0 ; j < network->header.nNeurons ; j++){
+                net += network->layers[k].neurons[i].wList[j+1] * network->layers[k-1].neurons[j].value;
 
             }
 
             //Add bias
             net += network->layers[k].neurons[i].wList[0];
 
-
+            ///Apply the activation function
             network->layers[k].neurons[i].value  = activateF(network->header,net);
+            network->layers[k].neurons[i].net = net;
         }
     }
 
     //OUTPUT LAYER
     for(int i = 0 ; i < network->header.nOutputs; i++){
         net = 0;
-        for(int j = 1 ; j < network->header.nNeurons + 1; j++){
-            //printf(" %f --",network->layers[network->header.nLayers + 1].neurons[i].wList[j]);
-            net += network->layers[network->header.nLayers + 1].neurons[i].wList[j] * network->layers[network->header.nLayers].neurons[j].value;
+        for(int j = 0 ; j < network->header.nNeurons + 1; j++){
+
+            net += network->layers[network->header.nLayers + 1].neurons[i].wList[j+1] * network->layers[network->header.nLayers].neurons[j].value;
 
         }
 
         //Add bias
         net += network->layers[network->header.nLayers + 1].neurons[i].wList[0];
 
-        network->layers[network->header.nLayers + 1].neurons[i].value  = activateF(network->header,net);
+        ///Apply the activation function
+        network->layers[network->header.nLayers + 1].neurons[i].value  =   activateF(network->header,net);
+        network->layers[network->header.nLayers + 1].neurons[i].net = net;
+
     }
 }
 
 void backpropagateError(mlp* network , double* target){
 
-    int lastLayer = network->header.nLayers + 1;
+    int lastLayer = network->header.nLayers + 1;    //Output layer index
 
     //For each output neuron
     for ( int j = 0; j < network->header.nOutputs; j++ ){
-		//It does the formula more visual
+
 		double dj = target[j];
 		double outHj = network->layers[lastLayer].neurons[j].value;
 
-		//-(resulObjetivo[j] - salida[j]) * g'(net^H_j) //La derivada es: salida[j]*(1-salida[j])
-		network->layers[lastLayer].neurons[j].delta = - 2 * (dj - outHj) * (outHj * ( 1 - outHj ) );
+		network->layers[lastLayer].neurons[j].delta = - (dj - outHj) * outHj * ( 1 - outHj ) ;
 	}
 
 
-    //Last hidden layer
+    //LAST HIDDEN LAYER
     for ( int j = 0; j < network->header.nNeurons; j++ ){
 
             double net = 0.0;
@@ -283,37 +288,38 @@ void backpropagateError(mlp* network , double* target){
 				
 				double weightH1ij = network->layers[lastLayer].neurons[i].wList[j+1];
 				double deltaH1i = network->layers[lastLayer].neurons[i].delta;
+                
 
 			    net += weightH1ij * deltaH1i;
 		    }
  	
+           
 
         double outhj = network->layers[lastLayer-1].neurons[j].value;
-
- 		network->layers[lastLayer-1].neurons[j].delta = net * (outhj * (1 - outhj));
+    
+ 		network->layers[lastLayer-1].neurons[j].delta =  net * outhj * ( 1 - outhj);
     }
 
 
     
     
-    //For each normal layer
+    //HIDDEN LAYERS
     for ( int h = lastLayer - 2; h > 0; h-- ){
-
         for ( int j = 0; j < network->header.nNeurons; j++ ){
 
             double net = 0.0;
 	 		for( int i = 0; i < network->header.nNeurons; i++ ){
 
-				//It does the formula more visual
+
 				double weightH1ij =  network->layers[h+1].neurons[i].wList[j+1];
 				double deltaH1i =  network->layers[h+1].neurons[i].delta;
 
 			    net += weightH1ij * deltaH1i;
 		}
-		//It does the formula more visual
+
  		double outhj = network->layers[h].neurons[j].value;
 
- 		network->layers[h].neurons[j].delta = net * (outhj * (1 - outhj));
+ 		network->layers[h].neurons[j].delta =  net * outhj * (1 - outhj);
         }
 	}
 
@@ -323,76 +329,69 @@ void backpropagateError(mlp* network , double* target){
 void accumulateChange(mlp* network){
 
 
-    //First hidden layer
-    //For each neuron of first hidden layer
+    //FIRST HIDDEN LAYER
 	for ( int j = 0; j < network->header.nNeurons; j++ ){
 
 		//For each neuron on input layer
         for ( int i = 1; i <= network->header.nInputs; i++ ){
 
 		    //It does the formula more visual
-            double deltaWhji = network->layers[1].neurons[j].wDelta[i];
-            double deltahj = network->layers[1].neurons[i].delta;
-			double outh1i = network->layers[0].neurons[i].value;
+            double deltahj = network->layers[1].neurons[j].delta;
+			double outh1i = network->layers[0].neurons[i - 1].value;
 
-			network->layers[1].neurons[j].wDelta[i] = deltaWhji + deltahj * outh1i;
+			network->layers[1].neurons[j].wDelta[i] += (deltahj * outh1i);
 		}
 
 
         //Bias
         double deltaWhjBias = network->layers[1].neurons[j].wDelta[0];
 		double deltahj = network->layers[1].neurons[j].delta;
-
 		network->layers[1].neurons[j].wDelta[0] = deltaWhjBias + deltahj;	
 
 	}
 
 
 
-    // //For hidden layers
+    //HIDDEN LAYERS
 	for ( int h = 2; h <= network->header.nLayers; h++ ){
 
 		//For each neuron of layer h
 		for ( int j = 0; j < network->header.nNeurons; j++ ){
 			//For each neuron of layer h-1
-			for ( int i = 1; i < network->header.nNeurons; i++ ){
+			for ( int i = 1; i <= network->header.nNeurons; i++ ){
 				//It does the formula more visual
-				double deltaWhji = network->layers[h].neurons[j].wDelta[i];
 				double deltahj = network->layers[h].neurons[j].delta;
-				double outh1i = network->layers[h-1].neurons[i].value;
+				double outh1i = network->layers[h-1].neurons[i-1].value;
 
-				network->layers[h].neurons[j].wDelta[i] = deltaWhji + deltahj * outh1i;
+				network->layers[h].neurons[j].wDelta[i] += (deltahj * outh1i);
 			}
 
 			//Bias
 			//It does the formula more visual
-			double deltaWhjBias = network->layers[h].neurons[j].wDelta[0];
 			double deltahj = network->layers[h].neurons[j].delta;
 
-			network->layers[h].neurons[j].wDelta[0] = deltaWhjBias + deltahj;
+			network->layers[h].neurons[j].wDelta[0] += deltahj;
 		}
 	}
 
 
-    //Output layer
-    // //For each neuron of layer h
+    //OUTPUT LAYER
     for ( int j = 0; j < network->header.nOutputs; j++ ){
 	    //For each neuron of layer h-1
-		for( int i = 1; i < network->header.nNeurons; i++ ){
-			//It does the formula more visual
-			double deltaWhji = network->layers[network->header.nLayers + 1 ].neurons[j].wDelta[i];
-			double deltahj = network->layers[network->header.nLayers + 1].neurons[j].delta;
-			double outh1i = network->layers[network->header.nLayers ].neurons[i].value;
+		for( int i = 1; i <= network->header.nNeurons; i++ ){
 
-			network->layers[network->header.nLayers + 1].neurons[j].wDelta[i] = deltaWhji + deltahj * outh1i;
+
+			double deltahj = network->layers[network->header.nLayers + 1].neurons[j].delta;
+			double outh1i = network->layers[network->header.nLayers ].neurons[i-1].value;
+
+			network->layers[network->header.nLayers + 1].neurons[j].wDelta[i] += deltahj * outh1i;
 		}
 
-		//Bias
-		//It does the formula more visual
-		double deltaWhjBias =  network->layers[network->header.nLayers + 1].neurons[j].wDelta[0];
+
+		//Add bias
 		double deltahj = network->layers[network->header.nLayers + 1].neurons[j].delta;
 
-		network->layers[network->header.nLayers + 1].neurons[j].wDelta[0] = deltaWhjBias + deltahj;
+		network->layers[network->header.nLayers + 1].neurons[j].wDelta[0] += deltahj;
 
 
 	}
@@ -402,51 +401,129 @@ void accumulateChange(mlp* network){
 void adjustWeights(mlp* network){
 
 
-    //First hidden layer
+    //FIRST HIDDEN LAYER
     for(int j = 0 ; j < network->header.nNeurons; j++){
 
-        for(int i = 1 ; i < network->header.nInputs; i++){
+        for(int i = 1 ; i <= network->header.nInputs; i++){
             
             double aux = network->layers[1].neurons[j].wList[i];
-            network->layers[1].neurons[j].wList[i] = network->layers[1].neurons[j].wList[i] - \
-                                                    (NU * network->layers[1].neurons[j].wDelta[i]) - \
-                                                    (ETA*(NU * network->layers[1].neurons[j].lastWdelta[i]));
-
-
-
-            network->layers[1].neurons[j].lastWdelta[i] = aux;
+            network->layers[1].neurons[j].wList[i] = aux - (NU * network->layers[1].neurons[j].wDelta[i])  \
+                                                    - (ETA*(NU * network->layers[1].neurons[j].lastWdelta[i]));
+            network->layers[1].neurons[j].lastWdelta[i] = ETA* network->layers[1].neurons[j].wList[i];
 
         }
 
         double aux = network->layers[1].neurons[j].wList[0];
-        network->layers[1].neurons[j].wList[0] = network->layers[1].neurons[j].wList[0] - \
-                                                    (NU * network->layers[1].neurons[j].wDelta[0]) - \
-                                                    (ETA*(NU * network->layers[1].neurons[j].lastWdelta[0]));
+        network->layers[1].neurons[j].wList[0] = aux - (NU * network->layers[1].neurons[j].wDelta[0])  \
+                                                - (ETA*(NU * network->layers[1].neurons[j].lastWdelta[0]));
 
-        network->layers[1].neurons[j].lastWdelta[0] = aux;
+        network->layers[1].neurons[j].lastWdelta[0] = ETA* network->layers[1].neurons[j].wList[0];
     }
 
 
 
-    //for(int h = 1 ; h < network->header.nLayers; h++){}
+    //HIDDEN LAYERS
+    for(int h = 2 ; h <= network->header.nLayers ; h++){
+    
+        for(int j = 0 ; j < network->header.nNeurons; j++){
+
+            for(int i = 1 ; i <= network->header.nNeurons; i++){
+                
+                double aux = network->layers[h].neurons[j].wList[i];
+                network->layers[h].neurons[j].wList[i] = aux - (NU * network->layers[h].neurons[j].wDelta[i]) \
+                                                         - (ETA*(NU * network->layers[h].neurons[j].lastWdelta[i]));
+
+                network->layers[h].neurons[j].lastWdelta[i] = ETA *  network->layers[h].neurons[j].wList[i];
+
+            }
+
+        double aux = network->layers[h].neurons[j].wList[0];
+        network->layers[h].neurons[j].wList[0] = aux - (NU * network->layers[h].neurons[j].wDelta[0]) \
+                                                - (ETA*(NU * network->layers[h].neurons[j].lastWdelta[0]));
+
+        network->layers[h].neurons[j].lastWdelta[0] = ETA * network->layers[h].neurons[j].wList[0];
+        }
+    }
+
+    //OUTPUT LAYER
+    int outLayer = network->header.nLayers + 1; //Output layer index
+    for(int j = 0 ; j < network->header.nOutputs; j++){
+
+            for(int i = 1 ; i <= network->header.nNeurons; i++){
+                
+                double aux = network->layers[outLayer].neurons[j].wList[i];
+                network->layers[outLayer].neurons[j].wList[i] = aux - (NU * network->layers[outLayer].neurons[j].wDelta[i]) \
+                                                                - (ETA*(NU * network->layers[outLayer].neurons[j].lastWdelta[i]));
+
+
+
+                network->layers[outLayer].neurons[j].lastWdelta[i] = ETA * network->layers[outLayer].neurons[j].wList[i];
+
+            }
+
+        double aux = network->layers[outLayer].neurons[j].wList[0];
+        network->layers[outLayer].neurons[j].wList[0] = network->layers[outLayer].neurons[j].wList[0] - (NU * network->layers[outLayer].neurons[j].wDelta[0]) -(ETA*(NU * network->layers[outLayer].neurons[j].lastWdelta[0]));
+
+        network->layers[outLayer].neurons[j].lastWdelta[0] =  ETA * network->layers[outLayer].neurons[j].wList[0];
+    }
 
 
 }
 
+void resetWdelta(mlp* network){
+
+    //FIRST HIDDEN LAYER
+    for(int j = 0 ; j < network->header.nNeurons; j++){
+
+        for(int i = 0 ; i <= network->header.nInputs; i++){
+            
+            network->layers[1].neurons[j].wDelta[i] = 0;
+        }
+    }
+
+
+
+    //HIDDEN LAYERS
+    for(int h = 2 ; h <= network->header.nLayers ; h++){
+    
+        for(int j = 0 ; j < network->header.nNeurons; j++){
+
+            for(int i = 1; i <= network->header.nNeurons; i++){
+                
+                network->layers[h].neurons[j].wDelta[i] = 0;
+
+            }
+
+        }
+    }
+
+    //OUTPUT LAYER
+    int outLayer = network->header.nLayers + 1;
+    for(int j = 0 ; j < network->header.nOutputs; j++){
+
+            for(int i = 0 ; i <= network->header.nNeurons; i++){
+                
+                network->layers[outLayer].neurons[j].wDelta[i] = 0;
+
+            }
+
+    }
+
+
+}
 
 void obtainError(mlp* network, double * outputs){
 
-    double total = 0 ;
-    //MSE ERROR
+    double total = 0.0 ;
 
+    //MSE ERROR
     for(int i = 0 ; i < network->header.nOutputs ; i++){
-        total += pow(network->layers[network->header.nLayers + 1].neurons[i].value - outputs[i],2);
+        //printf("Comparando %lf - %lf \n",network->layers[network->header.nLayers + 1].neurons[i].value,outputs[i]);
+        total += pow((network->layers[network->header.nLayers + 1].neurons[i].value - outputs[i]),2);
     }
 
-    //printf("\nError1 = %f",total);
-    //printf("\nError2= %f",total/network->header.nOutputs);
 
-    network->header.currError =  total/network->header.nOutputs;
+    network->header.currError =  total/ (double)network->header.nOutputs;
 
 }
 
@@ -454,9 +531,18 @@ double activateF(mlpHeader header , double value){
 
     double ret_val = 0;
 
-    if(header.aFunction == SIGMOID){
-        ret_val = 1 / (1 + exp(-value));
+
+    switch (header.aFunction){
+
+        case SIGMOID:
+                ret_val = 1 / (1 + exp(-value)); // f(x) = 1 / (1 + e^-x)
+            break;
+        
+        default:
+            ret_val = 0;
+            break;
     }
+
 
 
     return ret_val;
