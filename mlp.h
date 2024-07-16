@@ -5,19 +5,18 @@
 #include<time.h>
 #include<math.h>
 
+#pragma once
 
-#define NU 0.1
-#define ETA 0.2
+#define NU 0.5
+#define ETA 0.1
 
 
 
 /*
-
-Declaration of the multilayer perceptron struct
-
+    Declaration of the multilayer perceptron structs
 */
 
-//ACTIVAION FUNCTIONS
+//ACTIVATION FUNCTIONS
 typedef enum activationF{
 
     SIGMOID,
@@ -56,6 +55,7 @@ typedef struct mlpNeuron {
     double* wDelta;
     double* lastWdelta;
     double value;
+    double net;
     double delta;
     
     
@@ -93,14 +93,24 @@ void printNetwork(mlp* network);
 //Feed inputs to the mlp
 void feedInput(double* inputs,mlp* network);
 
+
+//Obtain error and save on network header
 void obtainError(mlp* network, double * outputs);
 
+//Forward propagate
 void forwardPropagation(mlp* network);
 
+//Backprogation and set all deltas
 void backpropagateError(mlp* network , double* target);
 
+//Accumulate change on wDelta list
 void accumulateChange(mlp* network);
 
+//Weights adjustments
 void adjustWeights(mlp* network);
 
+//Makes all wDelta list 0
+void resetWdelta(mlp* network);
+
+//Returns the value of the activation function
 double activateF(mlpHeader header , double value);
