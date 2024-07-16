@@ -26,6 +26,5 @@ typedef struct dataset {
 }   dataset;
 
 
-void testdataset();
 void parseDataset(FILE* fd, dataset* dataset);
 void normalizeDatasets(dataset* datasetX ,dataset* datasetY );

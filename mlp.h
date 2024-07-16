@@ -42,6 +42,8 @@ typedef struct mlpHeader {
     uint8_t nOutputs;
     uint8_t nLayers;
     uint8_t nNeurons;
+    double eta;
+    double mu;
     double currError;
 
 
@@ -83,7 +85,7 @@ typedef struct mlp {
 
 
 //Initialize with topology  { nInputs , nNeurons , nOutputs , nHiddenLayers } and activation function { SIGMOID | SOFTMAX }
-mlp* initMLP(int* top , activationF type);
+mlp* initMLP(int* top , activationF type , double eta , double nu);
 
 
 //Print network
