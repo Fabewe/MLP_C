@@ -415,15 +415,15 @@ void adjustWeights(mlp* network){
         for(int i = 1 ; i <= network->header.nInputs; i++){
             
             double aux = network->layers[1].neurons[j].wList[i];
-            network->layers[1].neurons[j].wList[i] = aux - (NU * network->layers[1].neurons[j].wDelta[i])  \
-                                                    - (ETA*(NU * network->layers[1].neurons[j].lastWdelta[i]));
+            network->layers[1].neurons[j].wList[i] = aux - (network->header.mu * network->layers[1].neurons[j].wDelta[i])  \
+                                                    - (network->header.eta *(network->header.mu * network->layers[1].neurons[j].lastWdelta[i]));
             network->layers[1].neurons[j].lastWdelta[i] =  network->layers[1].neurons[j].wList[i];
 
         }
 
         double aux = network->layers[1].neurons[j].wList[0];
-        network->layers[1].neurons[j].wList[0] = aux - (NU * network->layers[1].neurons[j].wDelta[0])  \
-                                                - (ETA*(NU * network->layers[1].neurons[j].lastWdelta[0]));
+        network->layers[1].neurons[j].wList[0] = aux - (network->header.mu * network->layers[1].neurons[j].wDelta[0])  \
+                                                - (network->header.eta*(network->header.mu * network->layers[1].neurons[j].lastWdelta[0]));
 
         network->layers[1].neurons[j].lastWdelta[0] =  network->layers[1].neurons[j].wList[0];
     }
@@ -438,16 +438,16 @@ void adjustWeights(mlp* network){
             for(int i = 1 ; i <= network->header.nNeurons; i++){
                 
                 double aux = network->layers[h].neurons[j].wList[i];
-                network->layers[h].neurons[j].wList[i] = aux - (NU * network->layers[h].neurons[j].wDelta[i]) \
-                                                         - (ETA*(NU * network->layers[h].neurons[j].lastWdelta[i]));
+                network->layers[h].neurons[j].wList[i] = aux - (network->header.mu * network->layers[h].neurons[j].wDelta[i]) \
+                                                         - (network->header.eta*(network->header.mu * network->layers[h].neurons[j].lastWdelta[i]));
 
                 network->layers[h].neurons[j].lastWdelta[i] =   network->layers[h].neurons[j].wList[i];
 
             }
 
         double aux = network->layers[h].neurons[j].wList[0];
-        network->layers[h].neurons[j].wList[0] = aux - (NU * network->layers[h].neurons[j].wDelta[0]) \
-                                                - (ETA*(NU * network->layers[h].neurons[j].lastWdelta[0]));
+        network->layers[h].neurons[j].wList[0] = aux - (network->header.mu * network->layers[h].neurons[j].wDelta[0]) \
+                                                - (network->header.eta*(network->header.mu * network->layers[h].neurons[j].lastWdelta[0]));
 
         network->layers[h].neurons[j].lastWdelta[0] = network->layers[h].neurons[j].wList[0];
         }
@@ -460,8 +460,8 @@ void adjustWeights(mlp* network){
             for(int i = 1 ; i <= network->header.nNeurons; i++){
                 
                 double aux = network->layers[outLayer].neurons[j].wList[i];
-                network->layers[outLayer].neurons[j].wList[i] = aux - (NU * network->layers[outLayer].neurons[j].wDelta[i]) \
-                                                                - (ETA*(NU * network->layers[outLayer].neurons[j].lastWdelta[i]));
+                network->layers[outLayer].neurons[j].wList[i] = aux - (network->header.mu * network->layers[outLayer].neurons[j].wDelta[i]) \
+                                                                - (network->header.eta*(network->header.mu * network->layers[outLayer].neurons[j].lastWdelta[i]));
 
 
 
@@ -470,7 +470,7 @@ void adjustWeights(mlp* network){
             }
 
         double aux = network->layers[outLayer].neurons[j].wList[0];
-        network->layers[outLayer].neurons[j].wList[0] = network->layers[outLayer].neurons[j].wList[0] - (NU * network->layers[outLayer].neurons[j].wDelta[0]) -(ETA*(NU * network->layers[outLayer].neurons[j].lastWdelta[0]));
+        network->layers[outLayer].neurons[j].wList[0] = network->layers[outLayer].neurons[j].wList[0] - (network->header.mu * network->layers[outLayer].neurons[j].wDelta[0]) -(network->header.eta*(network->header.mu * network->layers[outLayer].neurons[j].lastWdelta[0]));
 
         network->layers[outLayer].neurons[j].lastWdelta[0] =  network->layers[outLayer].neurons[j].wList[0];
     }
