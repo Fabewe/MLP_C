@@ -554,5 +554,33 @@ double activateF(mlpHeader header , double value){
 
 
     return ret_val;
+}
 
+
+int exportMLP(const char* exportFile, mlp* exportMLP){
+
+    FILE *fexp = fopen(exportFile,"WB");
+
+    //fwrite(&(exportMLP->header),sizeof(exportMLP->header),1,fexp);
+
+    mlpHeader auxHeader = exportMLP->header;
+
+    //fwrite(&(auxHeader),sizeof(auxHeader),1,fexp);
+
+    printf("\n%d Size  = %ld",auxHeader.aFunction,sizeof(auxHeader.aFunction));
+    printf("\n%d Size  = %ld",auxHeader.nInputs,sizeof(auxHeader.nInputs));
+    printf("\n%d Size  = %ld",auxHeader.nOutputs,sizeof(auxHeader.nOutputs));
+    printf("\n%d Size  = %ld",auxHeader.nLayers,sizeof(auxHeader.nLayers));
+    printf("\n%d Size  = %ld",auxHeader.nNeurons,sizeof(auxHeader.nNeurons));
+    printf("\n%f Size  = %ld",auxHeader.eta,sizeof(auxHeader.eta));
+    printf("\n%f Size  = %ld",auxHeader.mu,sizeof(auxHeader.mu));
+    printf("\n%f Size  = %ld",auxHeader.currError,sizeof(auxHeader.currError));
+    printf("\nSize  = %ld",sizeof(exportMLP->header));
+
+    printf("\n");
+
+
+
+    fclose(fexp);
+    return 0;
 }

@@ -88,6 +88,12 @@ typedef struct mlp {
 mlp* initMLP(int* top , activationF type , double eta , double nu);
 
 
+//Import MLP from file ***NOT WORKING****
+mlp* importMLP(char* importFile);
+
+//Export MLP to file ***NOT WORKING****
+int exportMLP(const char* exportFile, mlp* exportMLP);
+
 //Print network
 void printNetwork(mlp* network);
 
