@@ -21,4 +21,4 @@ $(TARGET):
 clean:
 	rm -f $(OBJS) $(TARGET)
 
-.PHONY: all clean install
+.PHONY: all clean
